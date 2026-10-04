@@ -9,7 +9,7 @@ Kyte is a web-based POS / inventory tool. Its admin UI lists resources (sales, o
 Two extraction modes:
 
 - **Extract observed (captured)** — collects every response the Kyte UI already fetched since the page loaded. Best when you've been clicking around and want to save what's on screen.
-- **Extract ALL (paginated)** — replays the most recently captured request against the API, optionally with overridden query parameters (e.g. `status=closed&payment=cash`). Reuses the page's auth headers so no token plumbing is required.
+- **Extract ALL (paginated)** — replays the most recently captured request against the API, optionally with overridden query parameters (e.g. `status=closed&payment=cash`). Resources with offset pagination (customers, products) are paged until the API returns a short page, with duplicates removed by id. Reuses the page's auth headers so no token plumbing is required.
 
 Output is a timestamped `.json` file saved via the browser's download dialog.
 
@@ -120,7 +120,7 @@ Content scripts only run on `web.kyteapp.com`. The extension never sends data an
 
 ## Limitations
 
-- **Paginated extraction is single-shot.** Despite the button label, `api.ts` currently replays the captured request once. True pagination (looping on `skip`/`cursor` until empty) is a TODO; the `paginationParam` field exists on `ResourceConfig` but isn't consumed yet.
+- **Pagination covers offset (`skip`) endpoints only.** Customers and products page through every record. Transactions and orders still replay the captured request once, because their endpoint has not been mapped to a paging parameter yet.
 - **Detail pages are not extractable.** The popup recognizes detail URLs and refuses with "not implemented yet" — the per-resource sub-endpoints (e.g. product + stock movement + purchase history) still need to be wired.
 - **No auth token handling of its own.** The extension relies entirely on cookies/headers the Kyte page already has. If you're not signed in, nothing works.
 - **Main-world content script.** Because `inject.ts` runs in `world: 'MAIN'`, it can't use `chrome.*` APIs. It communicates with the isolated content script via `window.postMessage`.
@@ -139,4 +139,4 @@ No extractor changes needed — they're resource-agnostic.
 
 ## License
 
-Private / unlicensed. Not affiliated with Kyte.
+MIT. Not affiliated with Kyte.
